@@ -1,0 +1,28 @@
+if (statusBot !== undefined) statusBot.close()
+String.prototype.equalsIgnoreCase = function(other){return typeof other !== 'string' ? false : this.toLowerCase() === other.toLowerCase()}
+var statusBotModel = require('app/base/Class').extend({
+	lastSong: [],
+	init: function(){
+		this.proxy = {djAdvance:$.proxy(this.onDjAdvance,this)}
+		API.on(API.DJ_ADVANCE,this.proxy.djAdvance)
+		API.sendChat('.')
+		console.log('on')
+		this.lastSong.push(API.getMedia().author + ' - ' + API.getMedia().title)
+	},
+	close: function() {
+		API.off(API.DJ_ADVANCE,this.proxy.djAdvance)
+		console.log('off')
+	},
+	onDjAdvance: function(obj) {
+		var songStr = this.lastSong[0]
+		var woots = obj.lastPlay.score.positive, mehs = obj.lastPlay.score.negative, curates = obj.lastPlay.score.curates 
+		if (woots === 1){var ww = '   :+1:~ '} else {var ww = '   :+1:~ '}
+		if (mehs === 1){var mm = '   :-1:~ '} else {var mm = '   :-1:~ '}
+		if (curates === 1){var cc = '   :green_heart:~ '} else {var cc = '   :green_heart:~ '}
+		var scoreStr = ' <> ' + ww + woots + mm + mehs + cc + curates
+		API.sendChat('/em: ' + songStr + scoreStr)
+		this.lastSong.length = 0
+		this.lastSong.push(API.getMedia().author + ' - ' + API.getMedia().title)
+	}
+})
+var statusBot = new statusBotModel
